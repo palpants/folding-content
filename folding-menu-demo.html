@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Folding Menu Demo</title>
+  <link rel="stylesheet" type="text/css" href="demo.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+</head>
+<body>
+<div id="description">
+</div>
+<div id="menu-container">
+  <ul class="folding-menu">
+    <li class="menu-item">
+      <a href="#">
+        <h3>Folding Menu Item</h3>
+      </a>
+      <div class="folding-content">
+        <h3>Great clicking!</h3>
+      </div>
+    </li>
+    <li class="menu-item">
+      <a href="#">
+        <h3>Menu Menu Item</h3>
+      </a>
+      <div class="folding-content">
+        <h3>Great clicking!</h3>
+      </div>
+    </li>
+    <li class="menu-item">
+      <a href="#">
+        <h3>This is a Folding Menu Item</h3>
+      </a>
+      <div class="folding-content">
+        <h3>I dare you to resize the browser.</h3>
+      </div>
+    </li>
+    <li class="menu-item">
+      <a href="#">
+        <h3>
+          This Menu<br>
+          Item is<br>
+          Taller Than<br>
+          The Rest
+        </h3>
+      </a>
+      <div class="folding-content">
+        <h3>Great clicking!</h3>
+      </div>
+    </li>
+    <li class="menu-item">
+      <a href="#">
+        <h3>Folding Item</h3>
+      </a>
+      <div class="folding-content">
+        <h3>Great clicking!</h3>
+      </div>
+    </li>
+    <li class="menu-item">
+      <a href="#">
+        <h3>Another Item</h3>
+      </a>
+      <div class="folding-content">
+        <h3>Great clicking!</h3>
+      </div>
+    </li>
+  </ul>
+</div>
+<script type="text/javascript" src="folding-menu.js"></script>
+<script type="text/javascript">
+  FOLDINGMENU.init([
+    '.folding-menu', // folding menu selector, supports multiple on the same page
+    '.menu-item', // menu item selector
+    '.folding-content', // selector for the content to be unfolded
+    '<li>', // wrapper before for unfolded content
+    '</li>', // wrapper after unfolded content
+    'X' // optional icon/content markup to insert in the close button
+  ]);
+</script>
+</body>
+</html>
