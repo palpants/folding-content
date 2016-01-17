@@ -23,7 +23,7 @@ MIT License
       </li>
     </ul>
 
-Note that the entire .menu-item will be clickable, and any immediate child <a> tags will have their href voided.
+Note that the entire .menu-item will be clickable, and any immediate child `<a>` tags will have their href voided.
 
 There's no reason you couldn't use divs for the hierarchy, or a ul/other content for the folding content. Just make sure the init matches your markup.
 
