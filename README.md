@@ -62,7 +62,8 @@ You will need lots more CSS to make things look good and animate well, but this 
 
 ### Resulting example markup
 
-After your .menu-item is clicked, the markup will look like this:
+After .menu-item is clicked, the markup will look like this:
+
     <ul class="folding-menu">
       <li class="menu-item">
         <a href="#">
