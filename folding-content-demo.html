@@ -65,16 +65,16 @@
     </li>
   </ul>
 </div>
-<script type="text/javascript" src="folding-menu.js"></script>
+<script type="text/javascript" src="folding-content.js"></script>
 <script type="text/javascript">
-  FOLDINGMENU.init([
-    '.folding-menu', // folding menu selector, supports multiple on the same page
-    '.menu-item', // menu item selector
-    '.folding-content', // selector for the content to be unfolded
-    '<li>', // wrapper before for unfolded content
-    '</li>', // wrapper after unfolded content
-    'X' // optional icon/content markup to insert in the close button
-  ]);
+  jQuery( '.folding-menu' ).foldingContent({
+    menuSelector: '.folding-menu',
+    menuItemSelector: '.menu-item',
+    contentSelector: '.folding-content',
+    unfoldBeforeMarkup: '<li>',
+    unfoldAfterMarkup: '</li>',
+    closeMarkup: '<span class="your-icon-class">X</span>'
+  });
 </script>
 </body>
 </html>
