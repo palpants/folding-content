@@ -1,6 +1,7 @@
 /* Necessary for functionality */
 
-.folding-content {
+.folding-content,
+.unfolded-content {
   display: none;
 }
 

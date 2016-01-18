@@ -5,7 +5,7 @@ MIT License
 
 ## How to use it
 0 Requires jQuery  
-1 Include folding-menu.js  
+1 Include folding-content.js  
 2 Create compatible markup  
 3 Init at bottom of page  
 4 Add required CSS  
@@ -35,14 +35,15 @@ Want multiple folding content menus on the same page? Give them all the same cla
         menuSelector: '.folding-menu', // (required) menu selector
         menuItemSelector: '.menu-item', // (required) menu item selector
         contentSelector: '.folding-content', // (required) folding content selector
-        unfoldBeforeMarkup: '<li>', (required) unfolded content wrapper before
+        unfoldBeforeMarkup: '<li>', // (required) unfolded content wrapper before
         unfoldAfterMarkup: '</li>', // (required) unfolded content wrapper after
         closeMarkup: '<span class="your-icon-class">X</span>' // (optional) markup to put inside close button
       });
     </script>
 
 ### Minimum corresponding CSS
-    .folding-content {
+    .folding-content,
+    .unfolded-content {
       display: none;
     }
 
@@ -54,6 +55,7 @@ Want multiple folding content menus on the same page? Give them all the same cla
       display: block;
     }
 
+    .menu-item:hover,
     .close-unfolded-content:hover {
       cursor: pointer;
     }
@@ -93,7 +95,6 @@ Check out the demo for now.
 
 ## TODO
   - Make demo prettier
-  - Fix sliding animations
 
 ## Changelog
 
@@ -103,6 +104,7 @@ Check out the demo for now.
   - Pass parameters as an object
   - Add debounce to window resize
   - Class name collision catching
+  - Fix sliding animations
 
 ### 1.0
   - Made the thing
