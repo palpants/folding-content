@@ -1,7 +1,5 @@
 # folding-content.js
 v1.1  
-by Samuel Palpant - http://samuel.palpant.com  
-MIT License  
 
 ## How to use it
 0 Requires jQuery  
@@ -47,20 +45,11 @@ Want multiple folding content menus on the same page? Give them all the same cla
       display: none;
     }
 
-    .unfolded-content {
-      width: 100%;
-    }
-
     .unfolded-content .folding-content {
       display: block;
     }
 
-    .menu-item:hover,
-    .close-unfolded-content:hover {
-      cursor: pointer;
-    }
-
-You will need lots more CSS to make things look good and animate well, but this is what affects functionality.
+You will need lots more CSS to make things look good, but this is what affects basic functionality and sliding animations.
 
 ### Resulting example markup
 
@@ -88,10 +77,20 @@ After .menu-item is clicked, the markup will look like this:
 The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unfolded-content class gets added by the script later).
 
 ### Recommended additional CSS
+    .unfolded-content {
+      width: 100%;
+    }
+    
+    .menu-item:hover,
+    .close-unfolded-content:hover {
+      cursor: pointer;
+    }
+    
+    .active-item:after {
+      /* Add an arrow or something to denote this is the active item */
+    }
 
-TODO
-
-Check out the demo for now.
+Check out the demo for additional styling.
 
 ## TODO
   - Make demo prettier
@@ -108,3 +107,7 @@ Check out the demo for now.
 
 ### 1.0
   - Made the thing
+
+## Credit and license
+by Samuel Palpant - http://samuel.palpant.com  
+MIT License  
