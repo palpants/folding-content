@@ -1,5 +1,5 @@
 # folding-content.js
-v1.1  
+v1.1.1  
 
 ## How to use it
 0 Requires jQuery  
@@ -80,20 +80,21 @@ The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unf
     .unfolded-content {
       width: 100%;
     }
-    
+
     .menu-item:hover,
     .close-unfolded-content:hover {
       cursor: pointer;
     }
-    
+
     .active-item:after {
-      /* Add an arrow or something to denote this is the active item */
+      Add an arrow or something to denote this is the active item
     }
 
 Check out the demo for additional styling.
 
 ## TODO
   - Make demo prettier
+  - Transition to using jQuery cache
 
 ## Changelog
 

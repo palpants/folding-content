@@ -1,6 +1,6 @@
 /*
 folding-content.js
-v1.1
+v1.1.1
 by Samuel Palpant - http://samuel.palpant.com
 MIT License
 */
@@ -106,8 +106,20 @@ jQuery.fn.foldingContent = function( Args ) {
     function cleanUpActiveFoldingMenu(){
       jQuery( '.end-of-row' ).removeClass( 'end-of-row' );
       jQuery( '.active-item' ).css( 'height', '' );
-      jQuery( '.active-item' ).removeClass( 'active-item' );
+      jQuery( '.active-item' ).removeClass( 'active-item' ).addClass( 'active-item-out' );
       jQuery( '.unfolded-content' ).slideUp( 400, function() {
+        jQuery( this ).children( contentSelector ).appendTo( '.active-item-out' );
+        // workaround for a bug that happens when you click furiously
+        /*var contentChildren = jQuery( '.active-item-out' ).children( contentSelector );
+        var contentNum = contentChildren.length;
+        if ( contentNum > 1 ) {
+          for ( var i = contentNum - 1; i > 0; i-- ) {
+            contentChildren.eq( i ).remove();
+            console.warn( 'removing ' + i );
+          }
+        }*/
+        // end workaround
+        jQuery( '.active-item-out' ).removeClass( 'active-item-out' );
         jQuery( this ).remove();
       });
     }
@@ -150,6 +162,11 @@ jQuery.fn.foldingContent = function( Args ) {
 
     // open or close folding menu when parent clicked
     jQuery( '.folding-parent' ).click( function() {
+      if ( jQuery( '.active-item-in' ).length || jQuery( '.active-item-out' ).length ) {
+        // a menu is in the middle of opening/closing so do nothing
+        return;
+      }
+
       if ( jQuery( this ).hasClass( 'active-item' ) ) {
         // this menu is already open so close it
         cleanUpActiveFoldingMenu();
@@ -173,13 +190,21 @@ jQuery.fn.foldingContent = function( Args ) {
       var wrapper = '<div class="close-unfolded-content">' + closeButtonMarkup + '</div>';
       wrapper = unfoldedContentBefore + wrapper + unfoldedContentAfter;
       jQuery( wrapper ).insertAfter( '.end-of-row' );
-      jQuery( '.end-of-row' ).next().addClass( 'unfolded-content' );
-      jQuery( '.active-item > ' + contentSelector ).clone().appendTo( '.unfolded-content' );
-      jQuery( '.unfolded-content' ).slideDown( 400 );
+      var $thingAfterEndOfRow = jQuery( '.end-of-row' ).next();
+      // add the unfolded class and a temporary -in class
+      // only target the -in class for now, because right now another .unfolded-content exists in the
+      // process of animating back up
+      $thingAfterEndOfRow.addClass( 'unfolded-content unfolded-content-in' );
+      jQuery( '.active-item' ).addClass( 'active-item-in' );
+      jQuery( '.active-item > ' + contentSelector ).appendTo( '.unfolded-content-in' );
+      jQuery( '.unfolded-content-in' ).slideDown( 400, function() {
+        jQuery( '.active-item-in' ).removeClass( 'active-item-in' );
+        jQuery( this ).removeClass( 'unfolded-content-in' );
+      });
     });
 
     // reposition menu on window resize
-    jQuery( window ).resize( debounce( function() {
+    jQuery( window ).resize( throttle( function() {
       jQuery( '.end-of-row' ).removeClass( 'end-of-row' );
 
       var $activeItem = jQuery( '.active-item' );
@@ -204,18 +229,25 @@ jQuery.fn.foldingContent = function( Args ) {
   }); // document ready
 };
 
-// Debounce function from Underscore.js
-function debounce(func, wait, immediate) {
-	var timeout;
-	return function() {
-		var context = this, args = arguments;
-		var later = function() {
-			timeout = null;
-			if (!immediate) func.apply(context, args);
-		};
-		var callNow = immediate && !timeout;
-		clearTimeout(timeout);
-		timeout = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
+// Throttle from https://remysharp.com/2010/07/21/throttling-function-calls
+function throttle(fn, threshhold, scope) {
+  var last,
+      deferTimer;
+  return function () {
+    var context = scope || this;
+
+    var now = +new Date(),
+        args = arguments;
+    if (last && now < last + threshhold) {
+      // hold on to it
+      clearTimeout(deferTimer);
+      deferTimer = setTimeout(function () {
+        last = now;
+        fn.apply(context, args);
+      }, threshhold);
+    } else {
+      last = now;
+      fn.apply(context, args);
+    }
+  };
 }
