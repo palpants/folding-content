@@ -1,5 +1,5 @@
 # folding-content.js
-v1.1.1  
+v1.2
 
 ## How to use it
 0 Requires jQuery  
@@ -35,7 +35,7 @@ Want multiple folding content menus on the same page? Give them all the same cla
         contentSelector: '.folding-content', // (required) folding content selector
         unfoldBeforeMarkup: '<li>', // (required) unfolded content wrapper before
         unfoldAfterMarkup: '</li>', // (required) unfolded content wrapper after
-        closeMarkup: '<span class="your-icon-class">X</span>' // (optional) markup to put inside close button
+        closeMarkup: '&times;' // (optional) markup for your close icon to put inside close button
       });
     </script>
 
@@ -94,9 +94,14 @@ Check out the demo for additional styling.
 
 ## TODO
   - Make demo prettier
-  - Transition to using jQuery cache
+  - Transition to using jQuery cache to hold hidden content
+  - Better support for AJAXing folded content
 
 ## Changelog
+
+### 1.2
+  - Folded content is now moved instead of cloned, so #ids in folding content will never have 2 on the page
+  - Better protect content in the middle of an animation from new click events
 
 ### 1.1
   - Change name to folding-content.js

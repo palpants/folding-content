@@ -1,6 +1,6 @@
 /*
 folding-content.js
-v1.1.1
+v1.2
 by Samuel Palpant - http://samuel.palpant.com
 MIT License
 */
@@ -109,16 +109,6 @@ jQuery.fn.foldingContent = function( Args ) {
       jQuery( '.active-item' ).removeClass( 'active-item' ).addClass( 'active-item-out' );
       jQuery( '.unfolded-content' ).slideUp( 400, function() {
         jQuery( this ).children( contentSelector ).appendTo( '.active-item-out' );
-        // workaround for a bug that happens when you click furiously
-        /*var contentChildren = jQuery( '.active-item-out' ).children( contentSelector );
-        var contentNum = contentChildren.length;
-        if ( contentNum > 1 ) {
-          for ( var i = contentNum - 1; i > 0; i-- ) {
-            contentChildren.eq( i ).remove();
-            console.warn( 'removing ' + i );
-          }
-        }*/
-        // end workaround
         jQuery( '.active-item-out' ).removeClass( 'active-item-out' );
         jQuery( this ).remove();
       });
