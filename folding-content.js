@@ -1,6 +1,6 @@
 /*
 folding-content.js
-v1.2
+v2.0.0
 by Samuel Palpant - http://samuel.palpant.com
 MIT License
 */
@@ -20,196 +20,187 @@ jQuery.fn.foldingContent = function( Args ) {
       closeButtonMarkup       = _args.closeMarkup;
     }
 
-    // catch class name conflicts if someone used one of the script's classes in their document
-    if ( jQuery( '.folding-parent' ).length || jQuery( '.active-item' ).length || jQuery( '.unfolded-content' ).length ){
-      console.error( 'Class name conflict. Don\'t use any of these classes in your document: folding-parent, active-item, unfolded-content.' );
-    }
-
-    // set up folding parent menu items
-    jQuery( menuItemSelector, menuSelector ).each( function() {
-      if ( jQuery( this ).children( contentSelector ).length ) {
-        // this is a folding parent item so add a class
-        jQuery( this ).addClass( 'folding-parent' );
-        // and set href to void on immediate children a tags
-        jQuery( this ).children( 'a' ).attr( 'href', 'javascript:' );
+    // set up folding parent menu items and cache their content
+    function setupMenu(){
+      var $menuItems = jQuery( menuItemSelector, menuSelector );
+      var $menu = jQuery( menuSelector );
+      for ( var i = 0; i < $menuItems.length; i++ ) {
+        var $item = $menuItems.eq(i);
+        var $content = $item.children( contentSelector );
+        $item
+          // add cache key to data attribute
+          .data( 'data-fc-key', 'fcid-' + i )
+          // void href of immediate child links
+          .children( 'a' ).attr( 'href', 'javascript:' );
+        if ( ! $item.hasClass( 'folding-parent' ) ) {
+          $item.addClass( 'folding-parent' );
+        }
+        // store this item's content in jquery cache, then remove it
+        $menu.data( 'fcid-' + i, $content );
+        $content.remove();
       }
-    });
-
-    // get the 1 based index of the last item in the row of the thing that was clicked on
-    // get number of items in the row of the thing that was clicked on
-    function activeItemRow( $foldingActiveItem ) {
-      // need to get things relative to the active item to support multiple folding menus on same page
-      var $activeParent = jQuery('.active-item').parent( menuSelector );
-      var $activeChildren = $activeParent.children();
-
-      var $currentItem = $activeChildren.first();
-      var $nextItem = {};
-      var containerWidth = $activeParent.width();
-      var widthCounter = $currentItem.outerWidth( true );
-      var rowEndNumber = 0;
-      var numberInThisRow = 0;
-      var activeRow = false;
-      var endPosition = false;
-      while( false === endPosition ) {
-        // loop through menu items to find the end of the active row and
-        // how many items are in the active row
-        $nextItem = $currentItem.next();
-
-        if ( false === activeRow && $currentItem.hasClass( 'active-item' ) ) {
-          // the active item is in this row
-          activeRow = true;
-        }
-
-        if ( $nextItem.hasClass( 'unfolded-content' ) ) {
-          // next item is the unfolded content, so skip an iteration
-          $currentItem = $nextItem;
-        } else {
-          if ( $nextItem.length > 0 ) {
-            // this is not the last item in the menu
-            nextItemWidth = $nextItem.outerWidth( true );
-            //nextItemWidth = Math.ceil( $nextItem[0].getBoundingClientRect().width );
-            if ( widthCounter + nextItemWidth <= containerWidth ) {
-              // the next item isn't on a new row, so add the width and keep going
-              widthCounter += nextItemWidth;
-            } else {
-              // this is the last item in the row, so start counting the width over again
-              widthCounter = nextItemWidth;
-              endPosition = true;
-            }
-
-            if ( true === endPosition && false === activeRow ) {
-              // it's the end of an inactive row, so keep looping
-              endPosition = false;
-              numberInThisRow = 0;
-            }
-
-            $currentItem = $nextItem;
-          } else {
-            // this is the last item in the menu, so end everything
-            endPosition = true;
-          }
-
-          rowEndNumber ++;
-          numberInThisRow ++;
-        } // if unfolded-content else
-
-        if ( rowEndNumber > 500 ) {
-          // something is wrong, so stop
-          endPosition = true;
-          console.error( 'stopping before infinite loop' );
-        }
-      } // while
-
-      return [rowEndNumber, numberInThisRow];
     }
+
+    // label end of rows
+    function labelRows(){
+      jQuery( '.row-end' ).removeClass( 'row-end' );
+      jQuery( '.row-begin' ).removeClass( 'row-begin' );
+
+      var $menuItems = jQuery( menuItemSelector, menuSelector );
+      var rowY = -1;
+      var $prev = '';
+      $menuItems.each( function(){
+        $this = jQuery( this );
+        thisY = $this.position().top;
+
+        if ( thisY != rowY ) {
+          $this.addClass( 'row-begin' );
+          $prev = $this.prev();
+          if ( $prev.hasClass( 'unfolded-content' ) ) {
+            // the previous element is the unfolded content, so skip it and go next previous
+            $prev = $prev.prev();
+          }
+          $prev.addClass( 'row-end' );
+          console.log( thisY );
+          rowY = thisY;
+        }
+      });
+      $menuItems.last().addClass( 'row-end' );
+    }
+
+    // do initial menu setup
+    setupMenu();
+    labelRows();
 
     function cleanUpActiveFoldingMenu(){
-      jQuery( '.end-of-row' ).removeClass( 'end-of-row' );
-      jQuery( '.active-item' ).css( 'height', '' );
-      jQuery( '.active-item' ).removeClass( 'active-item' ).addClass( 'active-item-out' );
+      jQuery( '.active-item' )
+        .css( 'height', '' )
+        .removeClass( 'active-item' );
       jQuery( '.unfolded-content' ).slideUp( 400, function() {
-        jQuery( this ).children( contentSelector ).appendTo( '.active-item-out' );
-        jQuery( '.active-item-out' ).removeClass( 'active-item-out' );
         jQuery( this ).remove();
       });
     }
 
-    // add class end-of-row to specified position
-    function labelEndPosition( $children, endPosition) {
-      if ( $children.length > endPosition ) {
-        // add class to last item in complete row
-        $children.eq( endPosition - 1 ).addClass( 'end-of-row' );
-      } else {
-        // not a complete row, so add class to last item
-        $children.eq( $children.length - 1 ).addClass( 'end-of-row' );
-      }
-    }
-
-    // equalize height of active item with height of tallest item in row
-    function equalizeItemHeight( $parentElement, endPosition, numberInRow ) {
-      var $children = $parentElement.children( menuItemSelector );
-      var maxHeight = 0;
-
-      // find the tallest item in the row
-      for ( var i = endPosition; i > endPosition - numberInRow; i-- ) {
-        if ( maxHeight < $children.eq( i - 1 ).outerHeight() ) {
-          maxHeight = $children.eq( i - 1 ).outerHeight();
+    // find first and last item in $activeItem's row
+    // returns an object with .begin and .end
+    function activeItemRow( $activeItem ) {
+      var $rowBegin = '';
+      var $currentItem = $activeItem;
+      for ( var i = 0; i < 100; i++ ) {
+        if ( $currentItem.hasClass( 'row-begin' ) ) {
+          $rowBegin = $currentItem;
+          i += 200;
+        } else {
+          $currentItem = $currentItem.prev();
         }
       }
 
+      var $rowEnd = '';
+      $currentItem = $activeItem;
+      for ( var j = 0; j < 100; j++ ) {
+        if ( $currentItem.hasClass( 'row-end' ) ) {
+          $rowEnd = $currentItem;
+          j += 200;
+        } else {
+          $currentItem = $currentItem.next();
+        }
+      }
+
+      return { begin: $rowBegin, end: $rowEnd };
+    }
+
+    // equalize height of active item with height of tallest item in row
+    function equalizeItemHeight( $activeItem ) {
+      var $rowBegin = activeItemRow( $activeItem ).begin;
+
+      var isActiveRow = 0;
+      var $currentItem = $rowBegin;
+      var $activeRowItems = jQuery();
+      // get object of all items in active row
+      while ( 100 > isActiveRow ) {
+        isActiveRow++;
+        $activeRowItems = $activeRowItems.add( $currentItem );
+        if ( $currentItem.hasClass( 'row-end' ) ) {
+          isActiveRow += 200;
+        } else {
+          $currentItem = $currentItem.next();
+        }
+      }
+
+      var maxHeight = 0;
+      // find the height of the tallest item in the row
+      $activeRowItems.each( function(){
+        $this = jQuery( this );
+        if ( maxHeight < $this.outerHeight() ) {
+          maxHeight = $this.outerHeight();
+        }
+      });
+
+
       // set active item equal to tallest item
-      if ( jQuery( '.active-item' ).outerHeight() < maxHeight ) {
+      if ( $activeItem.outerHeight() < maxHeight ) {
         // reset the height on .active-item
-        jQuery('.active-item').css('height', '');
+        $activeItem.css('height', '');
         // outerHeight() can only find the height
         // we care about outer height, but need to set the inner height with height()
-        heightDifference = jQuery( '.active-item' ).outerHeight() - jQuery( '.active-item' ).height();
+        heightDifference = $activeItem.outerHeight() - $activeItem.height();
         var newHeight = maxHeight - heightDifference;
         // set the height
-        jQuery( '.active-item' ).height( newHeight );
+        $activeItem.height( newHeight );
       }
     }
 
     // open or close folding menu when parent clicked
-    jQuery( '.folding-parent' ).click( function() {
-      if ( jQuery( '.active-item-in' ).length || jQuery( '.active-item-out' ).length ) {
-        // a menu is in the middle of opening/closing so do nothing
-        return;
-      }
+    jQuery( menuSelector ).on( 'click', '.folding-parent', function() {
+      var $this = jQuery( this );
 
-      if ( jQuery( this ).hasClass( 'active-item' ) ) {
-        // this menu is already open so close it
+      if ( $this.hasClass( 'active-item' ) ) {
+        // this menu is already open so close it and be done
         cleanUpActiveFoldingMenu();
         return;
       }
 
       cleanUpActiveFoldingMenu();
 
-      var $activeItem = jQuery( this );
-      var $parent = jQuery( this ).parent();
-      var $children = jQuery( this ).parent().children( menuItemSelector );
+      $this.addClass( 'active-item' );
 
-      $activeItem.addClass( 'active-item' );
+      equalizeItemHeight( $this );
 
-      var rowData = activeItemRow( $activeItem );
-      var endPosition = rowData[0];
-      var numberInRow = rowData[1];
-      labelEndPosition( $children, endPosition );
-      equalizeItemHeight( $parent, endPosition, numberInRow );
-
+      // assemble content
       var wrapper = '<div class="close-unfolded-content">' + closeButtonMarkup + '</div>';
       wrapper = unfoldedContentBefore + wrapper + unfoldedContentAfter;
-      jQuery( wrapper ).insertAfter( '.end-of-row' );
-      var $thingAfterEndOfRow = jQuery( '.end-of-row' ).next();
-      // add the unfolded class and a temporary -in class
-      // only target the -in class for now, because right now another .unfolded-content exists in the
-      // process of animating back up
-      $thingAfterEndOfRow.addClass( 'unfolded-content unfolded-content-in' );
-      jQuery( '.active-item' ).addClass( 'active-item-in' );
-      jQuery( '.active-item > ' + contentSelector ).appendTo( '.unfolded-content-in' );
-      jQuery( '.unfolded-content-in' ).slideDown( 400, function() {
-        jQuery( '.active-item-in' ).removeClass( 'active-item-in' );
-        jQuery( this ).removeClass( 'unfolded-content-in' );
-      });
+      // add content
+      var $activeRowEnd = activeItemRow( $this ).end;
+      jQuery( wrapper ).insertAfter( $activeRowEnd );
+      $activeRowEnd.next().addClass( 'unfolded-content' );
+
+      // get content for this item from cache and append to wrapper
+      var contentKey = $this.data( 'data-fc-key' );
+      var $content = jQuery( menuSelector ).data( contentKey );
+      $content.appendTo( '.unfolded-content' );
+
+      // display content
+      jQuery( '.unfolded-content' ).slideDown( 400 );
     });
 
     // reposition menu on window resize
-    jQuery( window ).resize( throttle( function() {
-      jQuery( '.end-of-row' ).removeClass( 'end-of-row' );
+    var $menu = jQuery( menuSelector )[0];
+    var menuResize = throttle( function() {
+      // remove currently active content
+      var $content = jQuery( '.unfolded-content' ).detach();
+      // now the floats can flow naturally, so redo the labels
+      labelRows();
 
+      // if we removed content before, add it back in
       var $activeItem = jQuery( '.active-item' );
-      var $parent = jQuery( $activeItem ).parent();
-      var $children = jQuery( $activeItem ).parent().children( menuItemSelector );
-
-      var rowData = activeItemRow( $activeItem );
-      var endPosition = rowData[0];
-      var numberInRow = rowData[1];
-
-      labelEndPosition( $children, endPosition );
-      jQuery( '.active-item' ).css( 'height', '' );
-      equalizeItemHeight( $parent, endPosition, numberInRow );
-      jQuery( '.unfolded-content' ).insertAfter( '.end-of-row' );
-    }, 200 ));
+      if ( $activeItem.length ) {
+        $activeItem.css( 'height', '' );
+        equalizeItemHeight( $activeItem );
+        var $activeRowEnd = activeItemRow( $activeItem ).end;
+        $content.insertAfter( $activeRowEnd );
+      }
+    }, 300 );
+    addResizeListener( $menu, menuResize );
 
     // close folding menu when X clicked
     // click() doesn't work on dynamically added elements
@@ -217,7 +208,7 @@ jQuery.fn.foldingContent = function( Args ) {
       cleanUpActiveFoldingMenu();
     });
   }); // document ready
-};
+}; // jQuery.fn
 
 // Throttle from https://remysharp.com/2010/07/21/throttling-function-calls
 function throttle(fn, threshhold, scope) {
@@ -241,3 +232,151 @@ function throttle(fn, threshhold, scope) {
     }
   };
 }
+
+/**
+* Detect Element Resize
+*
+* https://github.com/sdecima/javascript-detect-element-resize
+* Sebastian Decima
+*
+* version: 0.5.3
+**/
+
+(function () {
+	var attachEvent = document.attachEvent,
+		stylesCreated = false;
+
+	if (!attachEvent) {
+		var requestFrame = (function(){
+			var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
+								function(fn){ return window.setTimeout(fn, 20); };
+			return function(fn){ return raf(fn); };
+		})();
+
+		var cancelFrame = (function(){
+			var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame ||
+								   window.clearTimeout;
+		  return function(id){ return cancel(id); };
+		})();
+
+		var resetTriggers = function (element){
+			var triggers = element.__resizeTriggers__,
+				expand = triggers.firstElementChild,
+				contract = triggers.lastElementChild,
+				expandChild = expand.firstElementChild;
+			contract.scrollLeft = contract.scrollWidth;
+			contract.scrollTop = contract.scrollHeight;
+			expandChild.style.width = expand.offsetWidth + 1 + 'px';
+			expandChild.style.height = expand.offsetHeight + 1 + 'px';
+			expand.scrollLeft = expand.scrollWidth;
+			expand.scrollTop = expand.scrollHeight;
+		};
+
+		var checkTriggers = function (element){
+			return element.offsetWidth != element.__resizeLast__.width ||
+						 element.offsetHeight != element.__resizeLast__.height;
+		};
+
+		var scrollListener = function (e){
+			var element = this;
+			resetTriggers(this);
+			if (this.__resizeRAF__) cancelFrame(this.__resizeRAF__);
+			this.__resizeRAF__ = requestFrame(function(){
+				if (checkTriggers(element)) {
+					element.__resizeLast__.width = element.offsetWidth;
+					element.__resizeLast__.height = element.offsetHeight;
+					element.__resizeListeners__.forEach(function(fn){
+						fn.call(element, e);
+					});
+				}
+			});
+		};
+
+		/* Detect CSS Animations support to detect element display/re-attach */
+		var animation = false,
+			animationstring = 'animation',
+			keyframeprefix = '',
+			animationstartevent = 'animationstart',
+			domPrefixes = 'Webkit Moz O ms'.split(' '),
+			startEvents = 'webkitAnimationStart animationstart oAnimationStart MSAnimationStart'.split(' '),
+			pfx  = '';
+		{
+			var elm = document.createElement('fakeelement');
+			if( elm.style.animationName !== undefined ) { animation = true; }
+
+			if( animation === false ) {
+				for( var i = 0; i < domPrefixes.length; i++ ) {
+					if( elm.style[ domPrefixes[i] + 'AnimationName' ] !== undefined ) {
+						pfx = domPrefixes[ i ];
+						animationstring = pfx + 'Animation';
+						keyframeprefix = '-' + pfx.toLowerCase() + '-';
+						animationstartevent = startEvents[ i ];
+						animation = true;
+						break;
+					}
+				}
+			}
+		}
+
+		var animationName = 'resizeanim';
+		var animationKeyframes = '@' + keyframeprefix + 'keyframes ' + animationName + ' { from { opacity: 0; } to { opacity: 0; } } ';
+		var animationStyle = keyframeprefix + 'animation: 1ms ' + animationName + '; ';
+	}
+
+	function createStyles() {
+		if (!stylesCreated) {
+			//opacity:0 works around a chrome bug https://code.google.com/p/chromium/issues/detail?id=286360
+			var css = (animationKeyframes ? animationKeyframes : '') +
+					'.resize-triggers { ' + (animationStyle ? animationStyle : '') + 'visibility: hidden; opacity: 0; } ' +
+					'.resize-triggers, .resize-triggers > div, .contract-trigger:before { content: \" \"; display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; } .resize-triggers > div { background: #eee; overflow: auto; } .contract-trigger:before { width: 200%; height: 200%; }',
+				head = document.head || document.getElementsByTagName('head')[0],
+				style = document.createElement('style');
+
+			style.type = 'text/css';
+			if (style.styleSheet) {
+				style.styleSheet.cssText = css;
+			} else {
+				style.appendChild(document.createTextNode(css));
+			}
+
+			head.appendChild(style);
+			stylesCreated = true;
+		}
+	}
+
+	window.addResizeListener = function(element, fn){
+		if (attachEvent) element.attachEvent('onresize', fn);
+		else {
+			if (!element.__resizeTriggers__) {
+				if (getComputedStyle(element).position == 'static') element.style.position = 'relative';
+				createStyles();
+				element.__resizeLast__ = {};
+				element.__resizeListeners__ = [];
+				(element.__resizeTriggers__ = document.createElement('div')).className = 'resize-triggers';
+				element.__resizeTriggers__.innerHTML = '<div class="expand-trigger"><div></div></div>' +
+																						'<div class="contract-trigger"></div>';
+				element.appendChild(element.__resizeTriggers__);
+				resetTriggers(element);
+				element.addEventListener('scroll', scrollListener, true);
+
+				/* Listen for a css animation to detect element display/re-attach */
+				animationstartevent && element.__resizeTriggers__.addEventListener(animationstartevent, function(e) {
+					if(e.animationName == animationName)
+						resetTriggers(element);
+				});
+			}
+			element.__resizeListeners__.push(fn);
+		}
+	};
+
+	window.removeResizeListener = function(element, fn){
+		if (attachEvent) element.detachEvent('onresize', fn);
+		else {
+			element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
+			if (!element.__resizeListeners__.length) {
+					element.removeEventListener('scroll', scrollListener);
+					element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__);
+			}
+		}
+	};
+})();

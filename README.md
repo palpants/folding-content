@@ -1,5 +1,5 @@
 # folding-content.js
-v1.2
+v2.0.0
 
 ## How to use it
 0 Requires jQuery  
@@ -13,10 +13,10 @@ v1.2
     <ul class="folding-menu">
       <li class="menu-item">
         <a href="#">
-          <h3>Folding Menu Item</h3>
+          <h3>Menu Item Title</h3>
         </a>
         <div class="folding-content">
-          <h3>Great clicking!</h3>
+          <p>This is the content.</p>
         </div>
       </li>
     </ul>
@@ -53,28 +53,25 @@ You will need lots more CSS to make things look good, but this is what affects b
 
 ### Resulting example markup
 
-After .menu-item is clicked, the markup will look like this:
+After .menu-item is clicked, the markup will be organized like this:
 
     <ul class="folding-menu">
       <li class="menu-item">
         <a href="#">
-          <h3>Folding Menu Item</h3>
+          <h3>Menu Item Title</h3>
         </a>
-        <div class="folding-content">
-          <h3>Great clicking!</h3>
-        </div>
       </li>
       <li class="unfolded-content">
         <div class="close-unfolded-content">
-          <span class="your-icon-class">X</span>
+          &times;
         </div>
         <div class="folding-content">
-          <h3>Great clicking!</h3>
+          <p>This is the content.</p>
         </div>
       </li>        
     </ul>
 
-The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unfolded-content class gets added by the script later).
+The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unfolded-content class gets added later by the script).
 
 ### Recommended additional CSS
     .unfolded-content {
@@ -98,6 +95,9 @@ Check out the demo for additional styling.
   - Better support for AJAXing folded content
 
 ## Changelog
+
+### 2.0.0
+  - Folding content is now stored as jQuery data
 
 ### 1.2
   - Folded content is now moved instead of cloned, so #ids in folding content will never have 2 on the page
