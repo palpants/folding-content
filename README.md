@@ -90,8 +90,7 @@ The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unf
 Check out the demo for additional styling.
 
 ## TODO
-  - Make demo prettier
-  - Transition to using jQuery cache to hold hidden content
+  - Fix height resize triggering responsive reset
   - Better support for AJAXing folded content
 
 ## Changelog
