@@ -1,6 +1,6 @@
 /*
 folding-content.js
-v2.0.0
+v2.1
 by Samuel Palpant - http://samuel.palpant.com
 MIT License
 */
@@ -240,9 +240,8 @@ FC.events = {
  * @since    2.1
  */
 FC.resize = {
-
+  // set up resize detection and callback
   init: function() {
-    //const $menu = jQuery( FC.menu.menuSelector )[0];
     const $menu = jQuery( FC.menu.menuSelector );
     FC.resize.addResizeCanary( $menu );
 
@@ -250,7 +249,7 @@ FC.resize = {
     addResizeListener( $canary, FC.resize.menuResize );
   },
 
-  // we don't want to detect height resize, so add a canary to detect container width resize
+  // we don't want to detect height resize, so add a canary to only detect container width resize
   addResizeCanary: function( $menu ) {
     // requires a height > 15px or else it doesn't detect the window getting smaller ¯\_(ツ)_/¯
     const canaryMarkup = '<div class="fc-resize-canary" style="height: 20px; margin-bottom: -20px;"></div>';
