@@ -1,5 +1,5 @@
 # folding-content.js
-v2.0.0
+v2.1
 
 ## How to use it
 0 Requires jQuery  
@@ -89,13 +89,14 @@ The .unfolded-content wrapper comes from your unfoldMarkupeBefore/After (the unf
 
 Check out the demo for additional styling.
 
-## TODO
-  - Fix height resize triggering responsive reset
-  - Better support for AJAXing folded content
-
 ## Changelog
 
-### 2.0.0
+### 2.1
+  - Fix content close doesn't use animation
+  - Refactor
+  - Add minification
+
+### 2.0
   - Folding content is now stored as jQuery data
 
 ### 1.2
@@ -107,7 +108,6 @@ Check out the demo for additional styling.
   - Transition to jQuery.fn
   - Pass parameters as an object
   - Add debounce to window resize
-  - Class name collision catching
   - Fix sliding animations
 
 ### 1.0

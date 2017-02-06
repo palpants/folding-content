@@ -86,8 +86,8 @@ FC.menu = {
     let rowY = -1;
     let $prev = '';
     $menuItems.each( function(){
-      $this = jQuery( this );
-      thisY = $this.position().top;
+      const $this = jQuery( this );
+      const thisY = $this.position().top;
 
       if ( thisY != rowY ) {
         $this.addClass( 'row-begin' );
@@ -164,7 +164,7 @@ FC.menu = {
     let maxHeight = 0;
     // find the height of the tallest item in the row
     $activeRowItems.each( function(){
-      $this = jQuery( this );
+      const $this = jQuery( this );
       if ( maxHeight < $this.outerHeight() ) {
         maxHeight = $this.outerHeight();
       }
@@ -176,8 +176,8 @@ FC.menu = {
       $activeItem.css('height', '');
       // outerHeight() can only find the height
       // we care about outer height, but need to set the inner height with height()
-      heightDifference = $activeItem.outerHeight() - $activeItem.height();
-      var newHeight = maxHeight - heightDifference;
+      const heightDifference = $activeItem.outerHeight() - $activeItem.height();
+      const newHeight = maxHeight - heightDifference;
       // set the height
       $activeItem.height( newHeight );
     }
@@ -282,7 +282,7 @@ FC.resize = {
  */
 jQuery.fn.foldingContent = function( Args ) {
   jQuery( document ).ready( function() {
-    _args = Args;
+    const _args = Args;
     const menuSelector          = _args.menuSelector;
     const menuItemSelector      = _args.menuItemSelector;
     const contentSelector       = _args.contentSelector;
