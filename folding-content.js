@@ -5,208 +5,302 @@ by Samuel Palpant - http://samuel.palpant.com
 MIT License
 */
 
-jQuery.fn.foldingContent = function( Args ) {
-  jQuery( document ).ready( function() {
-    // build variables from on-page script init
-    _args = Args;
-    var menuSelector          = _args.menuSelector;
-    var menuItemSelector      = _args.menuItemSelector;
-    var menuItemLink          = menuItemSelector + ' > a';
-    var contentSelector       = _args.contentSelector;
-    var unfoldedContentBefore = _args.unfoldBeforeMarkup;
-    var unfoldedContentAfter  = _args.unfoldAfterMarkup;
-    var closeButtonMarkup     = '';
-    if ( _args.closeMarkup ) {
-      closeButtonMarkup       = _args.closeMarkup;
-    }
+/**
+ * Namespace for the plugin.
+ *
+ * @since    2.1
+ */
+var FC = FC || {};
 
-    // set up folding parent menu items and cache their content
-    function setupMenu(){
-      var $menuItems = jQuery( menuItemSelector, menuSelector );
-      var $menu = jQuery( menuSelector );
-      for ( var i = 0; i < $menuItems.length; i++ ) {
-        var $item = $menuItems.eq(i);
-        var $content = $item.children( contentSelector );
-        $item
-          // add cache key to data attribute
-          .data( 'data-fc-key', 'fcid-' + i )
-          // void href of immediate child links
-          .children( 'a' ).attr( 'href', 'javascript:' );
-        if ( ! $item.hasClass( 'folding-parent' ) ) {
-          $item.addClass( 'folding-parent' );
-        }
-        // store this item's content in jquery cache, then remove it
-        $menu.data( 'fcid-' + i, $content );
-        $content.remove();
+/**
+ * Menu setup and maintenance.
+ *
+ * @since    2.1
+ */
+FC.menu = {
+
+  menuSelector: '',
+
+  menuItemSelector: '',
+
+  contentSelector: '',
+
+  unfoldedContentBefore: '',
+
+  unfoldedContentAfter: '',
+
+  closeButtonMarkup: '',
+
+  // do initial menu setup
+  init: function(
+    menuSelector,
+    menuItemSelector,
+    contentSelector,
+    unfoldedContentBefore,
+    unfoldedContentAfter,
+    closeButtonMarkup
+  ) {
+    FC.menu.menuSelector = menuSelector;
+    FC.menu.menuItemSelector = menuItemSelector;
+    FC.menu.contentSelector = contentSelector;
+    FC.menu.unfoldedContentBefore = unfoldedContentBefore;
+    FC.menu.unfoldedContentAfter = unfoldedContentAfter;
+    FC.menu.closeButtonMarkup = closeButtonMarkup;
+
+    FC.menu.setupMenu();
+    FC.menu.labelRows();
+
+    FC.events.addParentClickEvent();
+    FC.events.addCloseClickEvent();
+
+    FC.resize.init();
+  },
+
+  // set up folding parent menu items and cache their content
+  setupMenu: function() {
+    const $menuItems = jQuery( FC.menu.menuItemSelector, FC.menu.menuSelector );
+    const $menu = jQuery( FC.menu.menuSelector );
+    for ( let i = 0; i < $menuItems.length; i++ ) {
+      const $item = $menuItems.eq(i);
+      const $content = $item.children( FC.menu.contentSelector );
+      $item
+        // add cache key to data attribute
+        .data( 'data-fc-key', 'fcid-' + i )
+        // void href of immediate child links
+        .children( 'a' ).attr( 'href', 'javascript:' );
+      if ( ! $item.hasClass( 'folding-parent' ) ) {
+        $item.addClass( 'folding-parent' );
       }
+      // store this item's content in jquery cache, then remove it
+      $menu.data( 'fcid-' + i, $content );
+      $content.remove();
     }
+  },
 
-    // label end of rows
-    function labelRows(){
-      jQuery( '.row-end' ).removeClass( 'row-end' );
-      jQuery( '.row-begin' ).removeClass( 'row-begin' );
+  // label begin and end of rows
+  labelRows: function() {
+    jQuery( '.row-end' ).removeClass( 'row-end' );
+    jQuery( '.row-begin' ).removeClass( 'row-begin' );
 
-      var $menuItems = jQuery( menuItemSelector, menuSelector );
-      var rowY = -1;
-      var $prev = '';
-      $menuItems.each( function(){
-        $this = jQuery( this );
-        thisY = $this.position().top;
+    const $menuItems = jQuery( FC.menu.menuItemSelector, FC.menu.menuSelector );
+    let rowY = -1;
+    let $prev = '';
+    $menuItems.each( function(){
+      $this = jQuery( this );
+      thisY = $this.position().top;
 
-        if ( thisY != rowY ) {
-          $this.addClass( 'row-begin' );
-          $prev = $this.prev();
-          if ( $prev.hasClass( 'unfolded-content' ) ) {
-            // the previous element is the unfolded content, so skip it and go next previous
-            $prev = $prev.prev();
-          }
-          $prev.addClass( 'row-end' );
-          console.log( thisY );
-          rowY = thisY;
+      if ( thisY != rowY ) {
+        $this.addClass( 'row-begin' );
+        $prev = $this.prev();
+        if ( $prev.hasClass( 'unfolded-content' ) ) {
+          // the previous element is the unfolded content, so skip it and go next previous
+          $prev = $prev.prev();
         }
-      });
-      $menuItems.last().addClass( 'row-end' );
-    }
+        $prev.addClass( 'row-end' );
 
-    // do initial menu setup
-    setupMenu();
-    labelRows();
+        rowY = thisY;
+      }
+    });
+    $menuItems.last().addClass( 'row-end' );
+  },
 
-    function cleanUpActiveFoldingMenu(){
-      jQuery( '.active-item' )
-        .css( 'height', '' )
-        .removeClass( 'active-item' );
-      jQuery( '.unfolded-content' ).slideUp( 400, function() {
+  // close any active folding content
+  cleanUpActiveFoldingMenu: function() {
+    jQuery( '.active-item' )
+      .css( 'height', '' )
+      .removeClass( 'active-item' );
+    jQuery( '.unfolded-content' )
+      .slideUp( 400, function() {
         jQuery( this ).remove();
       });
-    }
+  },
 
-    // find first and last item in $activeItem's row
-    // returns an object with .begin and .end
-    function activeItemRow( $activeItem ) {
-      var $rowBegin = '';
-      var $currentItem = $activeItem;
-      for ( var i = 0; i < 100; i++ ) {
-        if ( $currentItem.hasClass( 'row-begin' ) ) {
-          $rowBegin = $currentItem;
-          i += 200;
-        } else {
-          $currentItem = $currentItem.prev();
-        }
-      }
-
-      var $rowEnd = '';
-      $currentItem = $activeItem;
-      for ( var j = 0; j < 100; j++ ) {
-        if ( $currentItem.hasClass( 'row-end' ) ) {
-          $rowEnd = $currentItem;
-          j += 200;
-        } else {
-          $currentItem = $currentItem.next();
-        }
-      }
-
-      return { begin: $rowBegin, end: $rowEnd };
-    }
-
-    // equalize height of active item with height of tallest item in row
-    function equalizeItemHeight( $activeItem ) {
-      var $rowBegin = activeItemRow( $activeItem ).begin;
-
-      var isActiveRow = 0;
-      var $currentItem = $rowBegin;
-      var $activeRowItems = jQuery();
-      // get object of all items in active row
-      while ( 100 > isActiveRow ) {
-        isActiveRow++;
-        $activeRowItems = $activeRowItems.add( $currentItem );
-        if ( $currentItem.hasClass( 'row-end' ) ) {
-          isActiveRow += 200;
-        } else {
-          $currentItem = $currentItem.next();
-        }
-      }
-
-      var maxHeight = 0;
-      // find the height of the tallest item in the row
-      $activeRowItems.each( function(){
-        $this = jQuery( this );
-        if ( maxHeight < $this.outerHeight() ) {
-          maxHeight = $this.outerHeight();
-        }
-      });
-
-
-      // set active item equal to tallest item
-      if ( $activeItem.outerHeight() < maxHeight ) {
-        // reset the height on .active-item
-        $activeItem.css('height', '');
-        // outerHeight() can only find the height
-        // we care about outer height, but need to set the inner height with height()
-        heightDifference = $activeItem.outerHeight() - $activeItem.height();
-        var newHeight = maxHeight - heightDifference;
-        // set the height
-        $activeItem.height( newHeight );
+  // find first and last item in $activeItem's row
+  // returns an object with .begin and .end
+  activeItemRow: function( $activeItem ) {
+    let $rowBegin = '';
+    let $currentItem = $activeItem;
+    for ( let i = 0; i < 100; i++ ) {
+      if ( $currentItem.hasClass( 'row-begin' ) ) {
+        $rowBegin = $currentItem;
+        i += 200;
+      } else {
+        $currentItem = $currentItem.prev();
       }
     }
 
-    // open or close folding menu when parent clicked
-    jQuery( menuSelector ).on( 'click', '.folding-parent', function() {
-      var $this = jQuery( this );
+    let $rowEnd = '';
+    $currentItem = $activeItem;
+    for ( let j = 0; j < 100; j++ ) {
+      if ( $currentItem.hasClass( 'row-end' ) ) {
+        $rowEnd = $currentItem;
+        j += 200;
+      } else {
+        $currentItem = $currentItem.next();
+      }
+    }
+
+    return { begin: $rowBegin, end: $rowEnd };
+  },
+
+  // equalize height of active item with height of tallest item in row
+  equalizeItemHeight: function( $activeItem ) {
+    const $rowBegin = FC.menu.activeItemRow( $activeItem ).begin;
+
+    let isActiveRow = 0;
+    let $currentItem = $rowBegin;
+    let $activeRowItems = jQuery();
+    // get object of all items in active row
+    while ( 100 > isActiveRow ) {
+      isActiveRow++;
+      $activeRowItems = $activeRowItems.add( $currentItem );
+      if ( $currentItem.hasClass( 'row-end' ) ) {
+        isActiveRow += 200;
+      } else {
+        $currentItem = $currentItem.next();
+      }
+    }
+
+    let maxHeight = 0;
+    // find the height of the tallest item in the row
+    $activeRowItems.each( function(){
+      $this = jQuery( this );
+      if ( maxHeight < $this.outerHeight() ) {
+        maxHeight = $this.outerHeight();
+      }
+    });
+
+    // set active item equal to tallest item
+    if ( $activeItem.outerHeight() < maxHeight ) {
+      // reset the height on .active-item
+      $activeItem.css('height', '');
+      // outerHeight() can only find the height
+      // we care about outer height, but need to set the inner height with height()
+      heightDifference = $activeItem.outerHeight() - $activeItem.height();
+      var newHeight = maxHeight - heightDifference;
+      // set the height
+      $activeItem.height( newHeight );
+    }
+  },
+} // FC.menu
+
+/**
+ * Events setup.
+ *
+ * @since    2.1
+ */
+FC.events = {
+  // open or close folding menu when parent clicked
+  addParentClickEvent: function() {
+    jQuery( FC.menu.menuSelector ).on( 'click', '.folding-parent', function() {
+      const $this = jQuery( this );
 
       if ( $this.hasClass( 'active-item' ) ) {
         // this menu is already open so close it and be done
-        cleanUpActiveFoldingMenu();
+        FC.menu.cleanUpActiveFoldingMenu();
         return;
       }
 
-      cleanUpActiveFoldingMenu();
+      FC.menu.cleanUpActiveFoldingMenu();
 
       $this.addClass( 'active-item' );
 
-      equalizeItemHeight( $this );
+      FC.menu.equalizeItemHeight( $this );
 
       // assemble content
-      var wrapper = '<div class="close-unfolded-content">' + closeButtonMarkup + '</div>';
-      wrapper = unfoldedContentBefore + wrapper + unfoldedContentAfter;
-      // add content
-      var $activeRowEnd = activeItemRow( $this ).end;
+      let wrapper = '<div class="close-unfolded-content">' + FC.menu.closeButtonMarkup + '</div>';
+      wrapper = FC.menu.unfoldedContentBefore + wrapper + FC.menu.unfoldedContentAfter;
+      // insert wrapper
+      const $activeRowEnd = FC.menu.activeItemRow( $this ).end;
       jQuery( wrapper ).insertAfter( $activeRowEnd );
-      $activeRowEnd.next().addClass( 'unfolded-content' );
+      const $foldingContent = $activeRowEnd.next();
+      $foldingContent.addClass( 'unfolded-content' );
 
       // get content for this item from cache and append to wrapper
-      var contentKey = $this.data( 'data-fc-key' );
-      var $content = jQuery( menuSelector ).data( contentKey );
-      $content.appendTo( '.unfolded-content' );
+      const contentKey = $this.data( 'data-fc-key' );
+      const $content = jQuery( FC.menu.menuSelector ).data( contentKey );
+      $content.appendTo( $foldingContent );
 
       // display content
-      jQuery( '.unfolded-content' ).slideDown( 400 );
+      $foldingContent.slideDown( 400 );
     });
+  },
 
-    // reposition menu on window resize
-    var $menu = jQuery( menuSelector )[0];
-    var menuResize = throttle( function() {
-      // remove currently active content
-      var $content = jQuery( '.unfolded-content' ).detach();
-      // now the floats can flow naturally, so redo the labels
-      labelRows();
-
-      // if we removed content before, add it back in
-      var $activeItem = jQuery( '.active-item' );
-      if ( $activeItem.length ) {
-        $activeItem.css( 'height', '' );
-        equalizeItemHeight( $activeItem );
-        var $activeRowEnd = activeItemRow( $activeItem ).end;
-        $content.insertAfter( $activeRowEnd );
-      }
-    }, 300 );
-    addResizeListener( $menu, menuResize );
-
-    // close folding menu when X clicked
-    // click() doesn't work on dynamically added elements
-    jQuery( menuSelector ).on( 'click', '.close-unfolded-content', function() {
-      cleanUpActiveFoldingMenu();
+  // close folding menu when X clicked
+  addCloseClickEvent: function() {
+    jQuery( FC.menu.menuSelector ).on( 'click', '.close-unfolded-content', function() {
+      FC.menu.cleanUpActiveFoldingMenu();
     });
+  },
+} // FC.events
+
+/**
+ * Handle container resizing.
+ *
+ * @since    2.1
+ */
+FC.resize = {
+
+  init: function() {
+    //const $menu = jQuery( FC.menu.menuSelector )[0];
+    const $menu = jQuery( FC.menu.menuSelector );
+    FC.resize.addResizeCanary( $menu );
+
+    const $canary = jQuery( '.fc-resize-canary' )[0];
+    addResizeListener( $canary, FC.resize.menuResize );
+  },
+
+  // we don't want to detect height resize, so add a canary to detect container width resize
+  addResizeCanary: function( $menu ) {
+    // requires a height > 15px or else it doesn't detect the window getting smaller ¯\_(ツ)_/¯
+    const canaryMarkup = '<div class="fc-resize-canary" style="height: 20px; margin-bottom: -20px;"></div>';
+    jQuery( FC.menu.menuSelector).parent().prepend( canaryMarkup );
+  },
+
+  // reposition menu on window resize
+  menuResize: throttle( function() {
+    // remove currently active content
+    const $content = jQuery( '.unfolded-content' ).detach();
+    // now the floats can flow naturally, so redo the labels
+    FC.menu.labelRows();
+
+    // if we removed content before, add it back in
+    const $activeItem = jQuery( '.active-item' );
+    if ( $activeItem.length ) {
+      $activeItem.css( 'height', '' );
+      FC.menu.equalizeItemHeight( $activeItem );
+      const $activeRowEnd = FC.menu.activeItemRow( $activeItem ).end;
+      $content.insertAfter( $activeRowEnd );
+    }
+  }, 300 ),
+} // FC.size
+
+/**
+ * Setup and run the jquery plugin.
+ *
+ * @since    1.0.0
+ */
+jQuery.fn.foldingContent = function( Args ) {
+  jQuery( document ).ready( function() {
+    _args = Args;
+    const menuSelector          = _args.menuSelector;
+    const menuItemSelector      = _args.menuItemSelector;
+    const contentSelector       = _args.contentSelector;
+    const unfoldedContentBefore = _args.unfoldBeforeMarkup;
+    const unfoldedContentAfter  = _args.unfoldAfterMarkup;
+    let closeButtonMarkup       = '';
+    if ( _args.closeMarkup ) {
+      closeButtonMarkup         = _args.closeMarkup;
+    }
+
+    FC.menu.init(
+      menuSelector,
+      menuItemSelector,
+      contentSelector,
+      unfoldedContentBefore,
+      unfoldedContentAfter,
+      closeButtonMarkup
+    );
   }); // document ready
 }; // jQuery.fn
 
