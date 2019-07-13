@@ -192,7 +192,7 @@ FC.menu = {
 FC.events = {
   // open or close folding menu when parent clicked
   addParentClickEvent: function() {
-    jQuery( FC.menu.menuSelector ).on( 'click', '.folding-parent', function() {
+    jQuery( FC.menu.menuSelector ).on( 'click tap touch', '.folding-parent', function() {
       const $this = jQuery( this );
 
       if ( $this.hasClass( 'active-item' ) ) {
@@ -228,7 +228,7 @@ FC.events = {
 
   // close folding menu when X clicked
   addCloseClickEvent: function() {
-    jQuery( FC.menu.menuSelector ).on( 'click', '.close-unfolded-content', function() {
+    jQuery( FC.menu.menuSelector ).on( 'click tap touch', '.close-unfolded-content', function() {
       FC.menu.cleanUpActiveFoldingMenu();
     });
   },
